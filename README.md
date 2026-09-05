@@ -4,16 +4,28 @@ Model Context Protocol server and agent skills for [CVD Portal](https://cvdporta
 
 This repository holds the public interface. It is documentation, manifests and skills. The server itself is hosted, so there is nothing to install and nothing to build.
 
-- **Endpoint** `https://cvdportal.com/api/mcp`
-- **Transport** Streamable HTTP
-- **Auth** Bearer API key
-- **Tools** 3
+Two servers, one for each side of a disclosure.
+
+| Server | Endpoint | Who it is for | Auth |
+|---|---|---|---|
+| Researcher | `https://cvdportal.com/api/mcp/public` | Anyone reporting a vulnerability to a manufacturer | None |
+| Manufacturer | `https://cvdportal.com/api/mcp` | The company operating a portal | Enterprise API key |
+
+Transport is Streamable HTTP on both.
 
 ## What it does
 
 CVD Portal gives an EU manufacturer a branded disclosure portal where security researchers file vulnerability reports, and carries those reports through to the Cyber Resilience Act obligations that follow. Article 14 of the CRA requires a manufacturer to notify its CSIRT within 24 hours of learning that a vulnerability in its product is actively exploited.
 
-This MCP server lets an AI agent do three things inside that workflow.
+### Researcher tools, no account needed
+
+| Tool | Purpose |
+|---|---|
+| `find_vendor_portal` | Resolve a manufacturer's portal by slug or custom domain |
+| `submit_vulnerability_to_vendor` | File a disclosure report to that manufacturer |
+| `track_vulnerability_report` | Read a filed report's status from its tracking token |
+
+### Manufacturer tools, Enterprise API key
 
 | Tool | Purpose | Scope required |
 |---|---|---|
@@ -25,7 +37,13 @@ Full input and output schemas are in [docs/tools.md](docs/tools.md).
 
 ## Connect
 
-### Claude Code
+### Claude Code, researcher side
+
+```bash
+claude mcp add --transport http cvd-portal-public https://cvdportal.com/api/mcp/public
+```
+
+### Claude Code, manufacturer side
 
 ```bash
 claude mcp add --transport http cvd-portal https://cvdportal.com/api/mcp \
@@ -37,6 +55,10 @@ claude mcp add --transport http cvd-portal https://cvdportal.com/api/mcp \
 ```json
 {
   "mcpServers": {
+    "cvd-portal-public": {
+      "type": "http",
+      "url": "https://cvdportal.com/api/mcp/public"
+    },
     "cvd-portal": {
       "type": "http",
       "url": "https://cvdportal.com/api/mcp",
@@ -52,7 +74,13 @@ Generate a key in the CVD Portal dashboard under Settings, then Developer. Keys 
 
 ## Access
 
-The MCP server requires an Enterprise-plan API key. A 401 means the key, the plan, or the source IP. Keys carry an optional scope list and an optional IP allowlist.
+The researcher server needs nothing. Its three tools mirror endpoints an unauthenticated browser already reaches, so it adds a transport, not a permission. Filing is limited to 5 reports per minute, per portal, per IP, the same ceiling as the web form, and the limit is shared so switching transport does not raise it.
+
+`track_vulnerability_report` returns status, vendor, product and dates. It never returns the report body, reproduction steps, impact or contact details. A tracking token proves possession, not authorship.
+
+A disclosure is a permanent record on the vendor's side and cannot be retracted through the API. Confirm the vendor and the finding with the person you are acting for before filing.
+
+The manufacturer server requires an Enterprise-plan API key. A 401 means the key, the plan, or the source IP. Keys carry an optional scope list and an optional IP allowlist.
 
 Every tool derives its tenant from the verified key. No argument accepts a company identifier, and no tool can read or write another tenant's data.
 

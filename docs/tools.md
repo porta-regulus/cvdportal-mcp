@@ -1,5 +1,108 @@
 # Tool reference
 
+Two servers. The researcher server at `/api/mcp/public` needs no key. The manufacturer server at `/api/mcp` needs an Enterprise-plan API key.
+
+---
+
+# Researcher server
+
+`https://cvdportal.com/api/mcp/public`
+
+No authentication. These three tools mirror endpoints an unauthenticated browser already reaches.
+
+## `find_vendor_portal`
+
+Resolve a manufacturer's disclosure portal. Call this before submitting, so a report reaches the right vendor. Never guess a slug.
+
+### Input
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `query` | string | Yes | Portal slug (`acme`), a custom domain (`disclose.acme.com`), or a URL. |
+
+### Output
+
+```json
+{
+  "companyName": "Example Manufacturing GmbH",
+  "slug": "example-mfg",
+  "portalUrl": "https://example-mfg.cvdportal.com",
+  "securityTxtUrl": "https://example-mfg.cvdportal.com/.well-known/security.txt",
+  "policyUrl": "https://example-mfg.cvdportal.com/policy",
+  "disclosureContact": "security@example-mfg.example",
+  "submitWith": { "tool": "submit_vulnerability_to_vendor", "slug": "example-mfg" }
+}
+```
+
+A verified custom domain wins over the `.cvdportal.com` subdomain. Rate limit is 30 lookups per minute per IP.
+
+## `submit_vulnerability_to_vendor`
+
+File a report to a manufacturer's public portal.
+
+A disclosure is a permanent record on the vendor's side and cannot be retracted through the API. Confirm the vendor and the finding with the person you are acting for before calling this.
+
+### Input
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `slug` | string | Yes | From `find_vendor_portal` or the vendor's `security.txt`. |
+| `description` | string | Yes | 10 to 10,000 characters. |
+| `productName` | string | No | Up to 255 characters. |
+| `vulnerabilityType` | enum | No | See the list below. |
+| `stepsToReproduce` | string | No | Up to 10,000 characters. |
+| `impact` | string | No | Up to 5,000 characters. |
+| `contactEmail` | string | No | Omit it and the report is anonymous, but the vendor cannot come back with questions and no email updates are sent. |
+| `pgpKey` | string | No | Public key, for an encrypted reply. |
+
+### Output
+
+```json
+{
+  "referenceNumber": "CVD-CLX8F2K9",
+  "trackingToken": "<opaque token>",
+  "trackingUrl": "https://example-mfg.cvdportal.com/status/<token>",
+  "createdAt": "2026-09-05T09:41:22.118Z",
+  "status": "NEW"
+}
+```
+
+Record the tracking token. It is the only way back to an anonymous report and it cannot be recovered.
+
+Rate limit is 5 reports per minute, per portal, per IP. It is the same key and ceiling the web form uses, so switching transport does not raise it.
+
+## `track_vulnerability_report`
+
+Read the status of a report already filed.
+
+### Input
+
+| Field | Type | Required |
+|---|---|---|
+| `trackingToken` | string | Yes |
+
+### Output
+
+```json
+{
+  "referenceNumber": "CVD-CLX8F2K9",
+  "status": "ACKNOWLEDGED",
+  "vendor": "Example Manufacturing GmbH",
+  "productName": "Gateway 4000",
+  "vulnerabilityType": "RCE",
+  "filedAt": "2026-09-05T09:41:22.118Z",
+  "lastUpdatedAt": "2026-09-06T11:02:44.900Z"
+}
+```
+
+It never returns the report body, reproduction steps, impact, contact email or PGP key. A tracking token proves possession, not authorship, so it reveals progress only. Rate limit is 10 lookups per minute per IP.
+
+---
+
+# Manufacturer server
+
+`https://cvdportal.com/api/mcp`
+
 Three tools. Each mirrors an existing v1 REST endpoint, so an agent over MCP can do what a script does over HTTP.
 
 Every tool derives its tenant from the verified API key. No argument accepts a company identifier. A tool that fails returns a readable error string rather than raising, so an agent can recover.
@@ -41,7 +144,7 @@ Mirrors `POST /api/v1/vulnerabilities`. Requires the `submissions:write` scope.
 
 ### Note on direction
 
-This tool files into your own workspace. It is the vendor recording a finding. A researcher disclosing to a third-party vendor uses the public portal endpoint instead, which needs no key. See [the disclosure skill](../skills/cvd-portal-disclosure/SKILL.md).
+This tool files into your own workspace. It is the vendor recording a finding. A researcher disclosing to a third-party vendor uses `submit_vulnerability_to_vendor` on the researcher server instead, which needs no key.
 
 ---
 

@@ -1,8 +1,8 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "com.cvdportal/cvd-portal",
-  "description": "Coordinated vulnerability disclosure and EU Cyber Resilience Act compliance for manufacturers.",
-  "version": "1.0.0",
+  "description": "Report vulnerabilities to EU manufacturers and track EU Cyber Resilience Act compliance.",
+  "version": "1.1.0",
   "websiteUrl": "https://cvdportal.com",
   "repository": {
     "url": "https://github.com/porta-regulus/cvdportal-mcp",
@@ -11,15 +11,7 @@
   "remotes": [
     {
       "type": "streamable-http",
-      "url": "https://cvdportal.com/api/mcp",
-      "headers": [
-        {
-          "name": "Authorization",
-          "description": "Bearer <API key>. Generate one in the dashboard under Settings, Developer. Requires an Enterprise plan.",
-          "isRequired": true,
-          "isSecret": true
-        }
-      ]
+      "url": "https://cvdportal.com/api/mcp/public"
     }
   ]
 }
