@@ -1,9 +1,22 @@
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "com.cvdportal/cvd-portal",
+  "title": "CVD Portal",
   "description": "Report vulnerabilities to EU manufacturers and track EU Cyber Resilience Act compliance.",
   "version": "1.1.0",
   "websiteUrl": "https://cvdportal.com",
+  "icons": [
+    {
+      "src": "https://cvdportal.com/android-chrome-512x512.png",
+      "mimeType": "image/png",
+      "sizes": ["512x512"]
+    },
+    {
+      "src": "https://cvdportal.com/android-chrome-192x192.png",
+      "mimeType": "image/png",
+      "sizes": ["192x192"]
+    }
+  ],
   "repository": {
     "url": "https://github.com/porta-regulus/cvdportal-mcp",
     "source": "github"

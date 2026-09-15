@@ -37,7 +37,22 @@ Full input and output schemas are in [docs/tools.md](docs/tools.md).
 
 ## Connect
 
-### Claude Code, researcher side
+### Claude Code plugin
+
+Install the plugin from the Claude community marketplace:
+
+```bash
+claude plugin marketplace add anthropics/claude-plugins-community
+claude plugin install cvd-portal@claude-community
+```
+
+For local testing from source:
+
+```bash
+claude --plugin-dir /path/to/cvdportal-mcp
+```
+
+### Claude Code MCP servers directly (standalone)
 
 ```bash
 claude mcp add --transport http cvd-portal-public https://cvdportal.com/api/mcp/public

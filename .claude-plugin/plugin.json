@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "cvd-portal",
+  "displayName": "CVD Portal",
+  "version": "1.0.0",
+  "description": "Coordinated vulnerability disclosure and EU Cyber Resilience Act compliance tools for manufacturers and security researchers.",
+  "author": {
+    "name": "Porta Regulus B.V.",
+    "email": "security@cvdportal.com",
+    "url": "https://cvdportal.com"
+  },
+  "homepage": "https://cvdportal.com",
+  "repository": "https://github.com/porta-regulus/cvdportal-mcp",
+  "license": "MIT",
+  "keywords": [
+    "cyber-resilience-act",
+    "cra",
+    "vulnerability-disclosure",
+    "cvd",
+    "csaf",
+    "security-txt",
+    "article-14",
+    "compliance"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "userConfig": {
+    "api_key": {
+      "type": "string",
+      "title": "CVD Portal API Key",
+      "description": "Enterprise API key for manufacturer features such as compliance status and Article 14 assessment. Leave empty for public researcher disclosure.",
+      "sensitive": true
+    }
+  }
+}
