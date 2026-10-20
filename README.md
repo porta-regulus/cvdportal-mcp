@@ -9,7 +9,7 @@ Two servers, one for each side of a disclosure.
 | Server | Endpoint | Who it is for | Auth |
 |---|---|---|---|
 | Researcher | `https://cvdportal.com/api/mcp/public` | Anyone reporting a vulnerability to a manufacturer | None |
-| Manufacturer | `https://cvdportal.com/api/mcp` | The company operating a portal | Enterprise API key |
+| Manufacturer | `https://cvdportal.com/api/mcp` | The company operating a portal | Browser sign-in (OAuth) or API key. Reporting plan or higher |
 
 Transport is Streamable HTTP on both.
 
@@ -25,32 +25,29 @@ CVD Portal gives an EU manufacturer a branded disclosure portal where security r
 | `submit_vulnerability_to_vendor` | File a disclosure report to that manufacturer |
 | `track_vulnerability_report` | Read a filed report's status from its tracking token |
 
-### Manufacturer tools, Enterprise API key
+### Manufacturer tools
 
-| Tool | Purpose | Scope required |
-|---|---|---|
-| `submit_vulnerability` | File a disclosure report into your own workspace | `submissions:write` |
-| `get_compliance_status` | Read your CRA compliance summary and open recommendations | `read` |
-| `generate_csaf_advisory` | Export a CSAF 2.0 VEX document for an advisory you own | `read` |
+The manufacturer server has more than 30 tools. They cover vulnerability report triage, Article 14 preparation, CSAF advisories, SBOM upload, and the CRA product journey from classification to the technical file. Each tool checks the plan and a scope.
 
-Full input and output schemas are in [docs/tools.md](docs/tools.md).
+| Plan | Tools |
+|---|---|
+| Reporting | `get_getting_started`, deadlines and next tasks, the Article 14 tools, remediation decisions, `upload_sbom`, `list_products` with id and name |
+| Compliance | All other tools, for example triage, advisories, `get_compliance_status`, the CRA product tools and `ask_expert` |
+
+The full tool list with scopes is at [docs.cvdportal.com/cvd/mcp-server](https://docs.cvdportal.com/cvd/mcp-server). [docs/tools.md](docs/tools.md) has the input and output schemas of the researcher tools and three manufacturer tools.
 
 ## Connect
 
 ### Claude Code plugin
 
-Install the plugin from the Claude community marketplace:
+The Claude Code plugin lives in its own repository, [porta-regulus/cvd-portal-claude-plugin](https://github.com/porta-regulus/cvd-portal-claude-plugin). It registers the manufacturer server and adds commands that list CRA gaps, write `SECURITY.md` and `security.txt`, and upload an SBOM.
 
-```bash
-claude plugin marketplace add anthropics/claude-plugins-community
-claude plugin install cvd-portal@claude-community
+```
+/plugin marketplace add porta-regulus/cvd-portal-claude-plugin
+/plugin install cvd-portal@porta-regulus
 ```
 
-For local testing from source:
-
-```bash
-claude --plugin-dir /path/to/cvdportal-mcp
-```
+Documentation is at [docs.cvdportal.com/cvd/claude-plugin](https://docs.cvdportal.com/cvd/claude-plugin).
 
 ### Claude Code MCP servers directly (standalone)
 
@@ -59,6 +56,12 @@ claude mcp add --transport http cvd-portal-public https://cvdportal.com/api/mcp/
 ```
 
 ### Claude Code, manufacturer side
+
+```bash
+claude mcp add --transport http cvd-portal https://cvdportal.com/api/mcp
+```
+
+Then run `/mcp`, select `cvd-portal` and sign in through the browser. To use an API key instead, for example on a CI runner, add the header. Set `CVDPORTAL_API_KEY` first, because an empty variable registers an empty key.
 
 ```bash
 claude mcp add --transport http cvd-portal https://cvdportal.com/api/mcp \
@@ -85,7 +88,7 @@ claude mcp add --transport http cvd-portal https://cvdportal.com/api/mcp \
 }
 ```
 
-Generate a key in the CVD Portal dashboard under Settings, then Developer. Keys are stored as SHA-256 hashes, so a lost key cannot be recovered, only replaced.
+Clients that support OAuth can drop the `headers` block and sign in through the browser. Generate a key in the CVD Portal dashboard under Settings, then API Keys. Keys are stored as SHA-256 hashes, so a lost key cannot be recovered, only replaced.
 
 ## Access
 
@@ -95,9 +98,9 @@ The researcher server needs nothing. Its three tools mirror endpoints an unauthe
 
 A disclosure is a permanent record on the vendor's side and cannot be retracted through the API. Confirm the vendor and the finding with the person you are acting for before filing.
 
-The manufacturer server requires an Enterprise-plan API key. A 401 means the key, the plan, or the source IP. Keys carry an optional scope list and an optional IP allowlist.
+The manufacturer server accepts an OAuth token or an API key from a company on the Reporting plan or higher. A 401 means the credential, the plan, or the source IP. Keys carry an optional scope list and an optional IP allowlist. On the Reporting plan a key can carry only the `read` scope. On the Compliance plan a key can carry any MCP scope. The REST API under `/api/v1` needs the Enterprise plan.
 
-Every tool derives its tenant from the verified key. No argument accepts a company identifier, and no tool can read or write another tenant's data.
+Every tool derives its tenant from the verified credential. A consultancy can act for a client company with the `onBehalfOfCompanyId` argument, and only when the signed-in user holds a seat in that company. A bare API key cannot act for another company.
 
 Rate limiting is applied per key.
 
@@ -107,7 +110,7 @@ Two skills in [skills/](skills/) describe the wider platform in a form an agent 
 
 **[cvd-portal-disclosure](skills/cvd-portal-disclosure/SKILL.md)** is for reporting a vulnerability to a manufacturer. It covers finding a vendor's portal through RFC 9116 `security.txt`, filing one report or a batch across several vendors, and tracking a report afterwards. It needs no API key and every endpoint it uses is public.
 
-**[cvd-portal-api](skills/cvd-portal-api/SKILL.md)** is for the manufacturer operating the portal. It covers the v1 REST API, which is a wider surface than the three MCP tools, including SBOM upload, SARIF ingest, Article 14 deadlines, product registration and webhooks. It needs an Enterprise-plan API key.
+**[cvd-portal-api](skills/cvd-portal-api/SKILL.md)** is for the manufacturer operating the portal. It covers the v1 REST API, including SBOM push from CI, SARIF ingest, Article 14 deadlines, product registration and webhooks. The REST API needs an Enterprise-plan API key. Below Enterprise, use the manufacturer MCP server.
 
 Use the disclosure skill when you are the researcher. Use the API skill when you are the vendor.
 

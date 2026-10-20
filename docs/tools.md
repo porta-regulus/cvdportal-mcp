@@ -1,6 +1,6 @@
 # Tool reference
 
-Two servers. The researcher server at `/api/mcp/public` needs no key. The manufacturer server at `/api/mcp` needs an Enterprise-plan API key.
+Two servers. The researcher server at `/api/mcp/public` needs no key. The manufacturer server at `/api/mcp` needs an OAuth token or an API key from a company on the Reporting plan or higher. This file covers three of its tools. The full list is at [docs.cvdportal.com/cvd/mcp-server](https://docs.cvdportal.com/cvd/mcp-server).
 
 ---
 
@@ -210,7 +210,7 @@ The advisory must already exist for that submission. Create it in the dashboard 
 | `Machine-readable CSAF export requires the Reporting plan.` | Plan gate on `csaf_export`. |
 | `No advisory found for that submission. Create the advisory in the dashboard first, then retry.` | The advisory does not exist, or is not yours. |
 
-A 401 at the HTTP layer, before any tool runs, means the key failed validation or the company is below the Enterprise plan.
+A 401 at the HTTP layer, before any tool runs, means the key failed validation or the company is below the Reporting plan. A tool that needs a higher plan returns a tool error that names the feature.
 
 ## Scopes
 
