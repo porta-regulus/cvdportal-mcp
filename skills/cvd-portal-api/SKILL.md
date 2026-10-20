@@ -15,7 +15,7 @@ Every route is scoped to the organisation that owns the API key. There is no way
 Authorization: Bearer <api-key>
 ```
 
-Keys are generated in the dashboard under Settings, Developer. They are stored as SHA-256 hashes, so a lost key cannot be recovered, only replaced.
+Keys are generated in the dashboard under Settings, then API Keys. They are stored as SHA-256 hashes, so a lost key cannot be recovered, only replaced.
 
 API access is gated to the Enterprise plan. A `403` with an upgrade message means the plan, not the key.
 

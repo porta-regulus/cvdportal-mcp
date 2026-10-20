@@ -6,10 +6,7 @@
     },
     "cvd-portal": {
       "type": "http",
-      "url": "https://cvdportal.com/api/mcp",
-      "headers": {
-        "Authorization": "Bearer ${user_config.api_key:-${CVDPORTAL_API_KEY}}"
-      }
+      "url": "https://cvdportal.com/api/mcp"
     }
   }
 }
